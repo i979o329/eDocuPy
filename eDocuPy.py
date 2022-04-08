@@ -5,6 +5,7 @@ import pydoc
 import os
 import sys
 import warnings
+import shutil
 
 
 warnings.filterwarnings("ignore")
@@ -14,10 +15,9 @@ SubModuleCounter = 0
 ModuleVersion = ''
 Continue = True
 
-
 def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = True):
 
-    global SubModules,SubModuleCounter,ModuleVersion #,StoragePath
+    global SubModules,SubModuleCounter,ModuleVersion
 
     StoragePath = os.getcwd() + '\\'
 
@@ -49,7 +49,7 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
     SubFolders[0] += ModuleVersion
     StoragePath += '\\'.join(SubFolders) + '\\'
     
-    os.makedirs(StoragePath,exist_ok=True)
+    os.makedirs(StoragePath,exist_ok=True);os.makedirs(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\',exist_ok=True)
 
     _Doc = []
     _Dir = FL(dir(inp),"_")
@@ -72,11 +72,11 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
     SortKey = dict((value,len(SortKey)-key) for (key,value) in dict(enumerate(SortKey)).items() )
 
     O = {}
-    OutputFile = ''
+    OutputFile = '' ; SepratedOutputFile = ''
     ModuleTag = ET.Element('Module')
     ModuleTag.set('Name', ModuleName)
 
-    db = sqlite3.connect(StoragePath + 'eDocuPy (' + ModuleName + ').sqlite')  # (":memory:")
+    db = sqlite3.connect(StoragePath + '#eDocuPy (' + ModuleName + ').sqlite')  # (":memory:")
     cur = db.cursor()
 
     cur.execute('DROP TABLE IF EXISTS ' + 'eDocuPy')
@@ -91,13 +91,18 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
         if (i[1] in DefaultClasses) | (i[3] == []):
 
             O[i[1]].setdefault(i[0],i[2])
-            OutputFile +=  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  ModuleName + '.' + i[0],'','') + FormatDoc('','','Documentation on ' + ModuleName + '.' + i[0] + ':',i[2])
+
+            SepratedOutputFile =  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  ModuleName + '.' + i[0],'','') + FormatDoc('','','Documentation on ' + ModuleName + '.' + i[0] + ':',i[2])
+            OutputFile +=  SepratedOutputFile
 
             ObjectTag = ET.SubElement(TypeTag, 'Object')
             ObjectTag.set('Name',ModuleName + '.' + i[0])
 
             ObjectDoc = ET.SubElement(ObjectTag,'Doc')
             ObjectDoc.text = i[2]
+            
+            with open(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\' + i[1].replace('<','(').replace('>',')') + ' ~ ' + ModuleName + '.' + i[0] + '.txt',mode='w', encoding="utf-8") as TXTFN:
+                TXTFN.write(SepratedOutputFile)
 
             cur.execute('INSERT INTO ' + 'eDocuPy' + ' (Type,Object,"Method(s) / Attribute(s)",Documetation) VALUES (?,?,?,?)', (i[1],ModuleName + '.' + i[0],'',i[2]))
 
@@ -111,7 +116,9 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
             O[i[1]].setdefault(i[0],[[],''])
             O[i[1]][i[0]][0].append(i[3])
             O[i[1]][i[0]][1] = i[2]
-            OutputFile +=  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  ModuleName + '.' + i[0],'','') + FormatDoc('','',r'Method(s) / Attribute(s):',str(i[3])) + FormatDoc('','','Documentation on ' + ModuleName + '.' + i[0] + ':',i[2])
+            
+            SepratedOutputFile =  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  ModuleName + '.' + i[0],'','') + FormatDoc('','',r'Method(s) / Attribute(s):',str(i[3])) + FormatDoc('','','Documentation on ' + ModuleName + '.' + i[0] + ':',i[2])
+            OutputFile += SepratedOutputFile
 
             ObjectTag = ET.SubElement(TypeTag, 'Object')
             ObjectTag.set('Name',ModuleName + '.' + i[0])
@@ -122,6 +129,9 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
             ObjectDoc = ET.SubElement(ObjectTag,'Doc')
             ObjectDoc.text = i[2]
 
+            with open(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\' + i[1].replace('<','(').replace('>',')') + ' ~ ' + ModuleName + '.' + i[0] + '.txt',mode='w', encoding="utf-8") as TXTFN:
+                TXTFN.write(SepratedOutputFile)
+
             cur.execute('INSERT INTO ' + 'eDocuPy' + ' (Type,Object,"Method(s) / Attribute(s)",Documetation) VALUES (?,?,?,?)', (i[1],ModuleName + '.' + i[0],str(i[3]),i[2]))
 
     db.commit()
@@ -131,14 +141,17 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
 
     XMLSTR = ET.tostring(ModuleTag)
 
-    with open(StoragePath + 'eDocuPy (' + ModuleName + ').txt',mode='w', encoding="utf-8") as TXTFN:
+    shutil.make_archive(StoragePath + '#eDocuPy (' + ModuleName + ')', 'zip', StoragePath + '\\#eDocuPy (' + ModuleName + ')\\')
+    shutil.rmtree(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\')
+    
+    with open(StoragePath + '#eDocuPy (' + ModuleName + ').txt',mode='w', encoding="utf-8") as TXTFN:
         TXTFN.write(OutputFile)
 
     tree = ET.ElementTree(ModuleTag)
-    tree.write(StoragePath + 'eDocuPy (' + ModuleName + ').xml')
+    tree.write(StoragePath + '#eDocuPy (' + ModuleName + ').xml')
 
     JS = json.dumps (O,indent= 5)
-    with open(StoragePath + 'eDocuPy (' + ModuleName + ').json',mode='w') as JSNFN:
+    with open(StoragePath + '#eDocuPy (' + ModuleName + ').json',mode='w') as JSNFN:
         json.dump(O,JSNFN)
 
     print(' '*5 + 'Documentation of (',ModuleName,') is Completed.\n')
@@ -150,6 +163,8 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
                 eDocuPy(k)
             else:
                 continue
+
+    os.system(f'start {os.path.realpath(os.getcwd())}')
 
     return None
 
@@ -195,6 +210,8 @@ while ModuleNameNotOK:
         if SubModulesExtraction.lower() in ['true','false']:
             SubModuleExtractionNotOK = False
             SubModulesExtraction = (SubModulesExtraction.capitalize() == 'True')
+            os.system("cls")
+            print('\nProcess started. Please wait ...\n')
             eDocuPy(ModuleForDocumentation,SubModulesExtraction)
         elif SubModulesExtraction.lower() == 'x':
             SubModuleExtractionNotOK = False
