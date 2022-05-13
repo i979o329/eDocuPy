@@ -3,84 +3,165 @@ import json
 import xml.etree.ElementTree as ET
 import pydoc
 import os
-import sys
 import warnings
 import shutil
+import inspect
+import pkgutil
+import tempfile
+import datetime
+#import sys
 
-
+#sys.setrecursionlimit(10000)
 warnings.filterwarnings("ignore")
 
 SubModules = {}
 SubModuleCounter = 0
-ModuleVersion = ''
-Continue = True
+#ModuleVersion = ''
+LogFile = ''
+PackageHandler = ''
+PKGs = dict([(MName,(IsPack,MPath)) for (MPath,MName,IsPack) in pkgutil.iter_modules(None,'')])
+StoragePath = ''
+StorageSubFolders = ''
+OutputFolder = ''
+LogFilePath = ''
 
-def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = True):
+def eDocuPy(ModuleForDocumentation = 'builtins' , SubModuleDocumentation = True):
+    
+    global StoragePath,StorageSubFolders,SubModules,SubModuleCounter,ModuleVersion,LogFile,LogFilePath,PackageHandler,PKGs
 
-    global SubModules,SubModuleCounter,ModuleVersion
+    StoragePath = os.getcwd() + '\\' + (ModuleForDocumentation.split('.')[0] if ModuleForDocumentation !='' else 'builtins')
+    if PackageHandler == '' : LogFilePath = StoragePath + '\\#ReadME ' + datetime.datetime.now().isoformat(sep=',', timespec='auto').replace(':','-') + '.LOG'
+    LogFile += "Module ( " + (ModuleForDocumentation if ModuleForDocumentation !='' else 'builtins') + " ) Documentation Status: \n"
 
-    StoragePath = os.getcwd() + '\\'
+    StorageSubFolders = ''
 
-    DefaultClasses = ["<class 'int'>", "<class 'float'>", "<class 'complex'>",
+    try:
+        if SubModules == {} :        
+            if ModuleForDocumentation in ['','builtins','__builtins__']:
+                inp = __import__('builtins')
+                os.makedirs(StoragePath,exist_ok=True)
+            elif ModuleForDocumentation.split('.')[0] in PKGs:
+                PackageHandler = __import__(ModuleForDocumentation, fromlist=[''])    
+                os.makedirs(StoragePath,exist_ok=True)
+                inp = PackageHandler
+        else:
+            if hasattr(PackageHandler,ModuleForDocumentation.split('.')[-1]):
+                inp = getattr(PackageHandler,ModuleForDocumentation.split('.')[-1])
+            else:
+                PackageHandler = __import__('.'.join(ModuleForDocumentation.split('.')[:-1]), fromlist=[''])
+                inp = __import__(ModuleForDocumentation, fromlist=[''])  
+
+    except BaseException as Err:
+        print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of ( ',ModuleForDocumentation,' ) is in progress ...\n')
+        print("\n\t",Err,'!!!') #,"\n\n"," " * 15, "And / Or\n\n\t", "Module has not been installed yet !!!\n\n")
+        
+        LogFile += "*** Error Ocurred During the Documentation of ( " + ModuleForDocumentation + " ) : " + str(Err) + '!!!\n'
+        with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+            LOGFILE.write(LogFile)
+
+        SubModuleCounter += 1
+        SubModules[ModuleForDocumentation] = 1
+        return 'ErrorOccured'
+
+    DefaultClasses = ("<class 'int'>", "<class 'float'>", "<class 'complex'>",
                       "<class 'str'>", "<class 'bool'>", "<class 'list'>",
                       "<class 'set'>", "<class 'tuple'>", "<class 'dict'>",
                       "<class 'frozenset'>", "<class 'bytes'>", "<class 'NoneType'>",
-                      ]
+                      )
+
+    ModuleName = ''
+    ModuleFilePath = []
+
     if ModuleForDocumentation in ['','builtins','__builtins__']:
-        ModuleName = 'builtins'
-        ModuleVersion = ModuleName + '-' + sys.version.split(' ')[0]
-        inp = __builtins__
-    else:
+
+        ModuleName = getattr(inp,'__name__') #'builtins'
+        ModuleVersion = '' # ModuleName + '-' + sys.version.split(' ')[0]
+        print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
+
+    elif ModuleForDocumentation.split('.')[0] in PKGs: #.get(ModuleForDocumentation),None):
         try:
-            inp = __import__(ModuleForDocumentation.split('.')[0])
-            ModuleName = ModuleForDocumentation
-        except ModuleNotFoundError as Err:
-            os.system("cls")
-            print("\n\t",Err,"\n\n"," " * 15, "And / Or\n\n\t","Module has not been installed !!!")
-            return None
 
-    if hasattr(inp,'__version__'):
-        ModuleVersion = '-' + str(getattr(inp,'__version__')).split(" ")[0]
-    elif hasattr(inp,'version'):
-        ModuleVersion = '-' + str(getattr(inp,'version')).split(" ")[0]
+            ModuleName = getattr(inp,'__name__') #ModuleForDocumentation
+            if hasattr(inp,'__file__'):
+                ModuleFilePath.append(os.path.dirname(inp.__file__))
+            else:
+                ModuleFilePath.append(PKGs[ModuleForDocumentation.split('.')[0]][1].path + '\\' + '\\'.join(ModuleForDocumentation.split('.')))#ModuleFilePath.append(os.path.dirname(inp.__file__))
+            print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
 
-    print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
-    SubFolders = ModuleForDocumentation.split('.')
-    SubFolders[0] += ModuleVersion
-    StoragePath += '\\'.join(SubFolders) + '\\'
-    
-    os.makedirs(StoragePath,exist_ok=True);os.makedirs(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\',exist_ok=True)
+        except BaseException as Err:
 
-    _Doc = []
-    _Dir = FL(dir(inp),"_")
+            print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of ( ',ModuleForDocumentation,' ) is in progress ...\n')
+            print("\n\t",Err,'!!!') #,"\n\n"," " * 15, "And / Or\n\n\t", "Module has not been installed yet !!!\n\n")
+            
+            LogFile += "*** Error Ocurred During the Documentation of ( " + ModuleForDocumentation + " ) : " + str(Err) + '!!!\n'
+
+            with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+                LOGFILE.write(LogFile)
+
+            SubModuleCounter += 1
+            SubModules[ModuleForDocumentation] = 1
+
+            return 'ErrorOccured'
+
+    if ModuleName == '' : return 'ErrorOccured'
+
+    if SubModules == {} :
+        with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+            LOGFILE.write(LogFile)        
+
+        if PKGs.get(inp.__name__,False)[0] and SubModuleDocumentation:
+            SortedSubModules = sorted([ModuleForDocumentation] + [MName for (MPath,MName,IsPack) in pkgutil.walk_packages(ModuleFilePath,inp.__name__+'.',lambda i : None) if not(MName.endswith('__main__'))],key=lambda i:(i.count('.'),i) )
+            SubModules = {i:0 for i in SortedSubModules}
+
+    SubFolders = ModuleForDocumentation.split('.')[1:]
+    StorageSubFolders = '\\' * bool(SubFolders) + '\\'.join(SubFolders) + '\\'
+    TempFolder = tempfile.mkdtemp() + '\\'
+    os.makedirs(TempFolder ,exist_ok=True)
+    os.makedirs(StoragePath + StorageSubFolders,exist_ok=True)
+
+    _Dir = [i for i in dir(inp) if str(type(getattr(inp,i))) != "<class 'module'>"] #FL(dir(inp))
     _Type = list(map(lambda _ : str(type(getattr(inp,_))) , _Dir))
-    _SubDir = list(map(lambda _ : FL(dir(getattr(inp,_)),"_") , _Dir))
-
-    for i in _Dir:
-        try:
-            _Doc.append(pydoc.render_doc(getattr(inp,i), "%s",renderer=pydoc.plaintext))
-        except:
-            _Doc.append('No Documentation !!!')
-            continue
 
     SortKey = ["<class 'type'>", "<class 'function'>", "<class 'builtin_function_or_method'>"]
     ModuleExclusiveTypes = [_ for _ in _Type if (not _ in SortKey+["<class 'module'>"])]
     ModuleExclusiveTypes = sorted([(ModuleExclusiveTypes.count(_),_) for _ in set(ModuleExclusiveTypes)],reverse=True)
     ModuleExclusiveTypes = [_[1] for _ in ModuleExclusiveTypes]
     SortKey += ModuleExclusiveTypes
-    SortKey += ["<class 'module'>"]
+    #SortKey += ["<class 'module'>"]
     SortKey = dict((value,len(SortKey)-key) for (key,value) in dict(enumerate(SortKey)).items() )
+
+    DataObjects = (set(ModuleExclusiveTypes).union(DefaultClasses))
+    _SubDir = []
+    _Doc = []    
+    
+    for _ in _Dir:
+        try:
+            ObjAttr = getattr(inp,_)
+            #if inspect.ismodule(ObjAttr):
+            #    _SubDir.append(repr(ObjAttr))
+            #    _Doc.append('Module Dependencies')
+            #elif str(type(ObjAttr)) in DataObjects:
+            if str(type(ObjAttr)) in DataObjects:
+                _SubDir.append(repr(ObjAttr))
+                _Doc.append('DATA')
+            else:
+                _SubDir.append(FL(dir(ObjAttr)))
+                _Doc.append(pydoc.render_doc(ObjAttr, "%s",renderer=pydoc.plaintext))
+        
+        except BaseException:
+            _Doc.append('No Documentation !!!')
+            continue
 
     O = {}
     OutputFile = '' ; SepratedOutputFile = ''
     ModuleTag = ET.Element('Module')
     ModuleTag.set('Name', ModuleName)
 
-    db = sqlite3.connect(StoragePath + '#eDocuPy (' + ModuleName + ').sqlite')  # (":memory:")
+    db = sqlite3.connect(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + ').sqlite')  # (":memory:")
     cur = db.cursor()
 
     cur.execute('DROP TABLE IF EXISTS ' + 'eDocuPy')
-    cur.execute('CREATE TABLE IF NOT EXISTS ' + 'eDocuPy' + ' (Type TEXT,Object TEXT,"Method(s) / Attribute(s)" TEXT,Documetation TEXT)')
+    cur.execute('CREATE TABLE IF NOT EXISTS ' + 'eDocuPy' + ' (Type TEXT,Object TEXT,"Method, Attribute / Data" TEXT,Documetation TEXT)')
 
     for i in sorted(zip(_Dir,_Type,_Doc,_SubDir),key=(lambda _ : (SortKey.get(_[1]),len(_[3]))),reverse=True):
 
@@ -88,51 +169,46 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
         TypeTag = ET.SubElement(ModuleTag, 'Class')
         TypeTag.set('Type',i[1])
 
-        if (i[1] in DefaultClasses) | (i[3] == []):
+        if i[3] == []:
 
             O[i[1]].setdefault(i[0],i[2])
 
-            SepratedOutputFile =  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  ModuleName + '.' + i[0],'','') + FormatDoc('','','Documentation on ' + ModuleName + '.' + i[0] + ':',i[2])
+            SepratedOutputFile =  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  (ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0],'','') + FormatDoc('','','Documentation on ' + (ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0] + ':',i[2])
             OutputFile +=  SepratedOutputFile
 
             ObjectTag = ET.SubElement(TypeTag, 'Object')
-            ObjectTag.set('Name',ModuleName + '.' + i[0])
+            ObjectTag.set('Name',(ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0])
 
             ObjectDoc = ET.SubElement(ObjectTag,'Doc')
             ObjectDoc.text = i[2]
             
-            with open(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\' + i[1].replace('<','(').replace('>',')') + ' ~ ' + ModuleName + '.' + i[0] + '.txt',mode='w', encoding="utf-8") as TXTFN:
-                TXTFN.write(SepratedOutputFile)
+            with open(TempFolder + i[1].replace('<','(').replace('>',')') + ' ~.' + i[0] + '.txt',mode='w', encoding="utf-8") as SepTXTFN:
+                SepTXTFN.write(SepratedOutputFile)
 
-            cur.execute('INSERT INTO ' + 'eDocuPy' + ' (Type,Object,"Method(s) / Attribute(s)",Documetation) VALUES (?,?,?,?)', (i[1],ModuleName + '.' + i[0],'',i[2]))
+            cur.execute('INSERT INTO ' + 'eDocuPy' + ' (Type,Object,"Method, Attribute / Data",Documetation) VALUES (?,?,?,?)', (i[1],(ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0],'',i[2]))
 
         else:
-
-            if (i[1] == "<class 'module'>" and ModuleName not in SubModules):
-                SubModules.setdefault(ModuleName + '.' + i[0],0)
-            elif ModuleName in SubModules:
-                SubModules[ModuleName] = 1
 
             O[i[1]].setdefault(i[0],[[],''])
             O[i[1]][i[0]][0].append(i[3])
             O[i[1]][i[0]][1] = i[2]
             
-            SepratedOutputFile =  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  ModuleName + '.' + i[0],'','') + FormatDoc('','',r'Method(s) / Attribute(s):',str(i[3])) + FormatDoc('','','Documentation on ' + ModuleName + '.' + i[0] + ':',i[2])
+            SepratedOutputFile =  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  (ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0],'','') + FormatDoc('','',r'Method, Attribute / Data:',str(i[3])) + FormatDoc('','','Documentation on ' + (ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0] + ':',i[2])
             OutputFile += SepratedOutputFile
 
             ObjectTag = ET.SubElement(TypeTag, 'Object')
-            ObjectTag.set('Name',ModuleName + '.' + i[0])
+            ObjectTag.set('Name',(ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0])
 
-            ObjectMethAttr = ET.SubElement(ObjectTag,'Methods_Attributes')
+            ObjectMethAttr = ET.SubElement(ObjectTag,'Method-Attribute_Data')
             ObjectMethAttr.text = '\n' + str(i[3])
 
             ObjectDoc = ET.SubElement(ObjectTag,'Doc')
             ObjectDoc.text = i[2]
 
-            with open(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\' + i[1].replace('<','(').replace('>',')') + ' ~ ' + ModuleName + '.' + i[0] + '.txt',mode='w', encoding="utf-8") as TXTFN:
-                TXTFN.write(SepratedOutputFile)
+            with open(TempFolder + i[1].replace('<','(').replace('>',')') + ' ~.' + i[0] + '.txt',mode='w', encoding="utf-8") as SepTXTFN:
+                SepTXTFN.write(SepratedOutputFile)
 
-            cur.execute('INSERT INTO ' + 'eDocuPy' + ' (Type,Object,"Method(s) / Attribute(s)",Documetation) VALUES (?,?,?,?)', (i[1],ModuleName + '.' + i[0],str(i[3]),i[2]))
+            cur.execute('INSERT INTO ' + 'eDocuPy' + ' (Type,Object,"Method, Attribute / Data",Documetation) VALUES (?,?,?,?)', (i[1],(ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0],str(i[3]),i[2]))
 
     db.commit()
     db.close()
@@ -141,35 +217,54 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
 
     XMLSTR = ET.tostring(ModuleTag)
 
-    shutil.make_archive(StoragePath + '#eDocuPy (' + ModuleName + ')', 'zip', StoragePath + '\\#eDocuPy (' + ModuleName + ')\\')
-    shutil.rmtree(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\')
+    shutil.make_archive(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + ')\\', 'zip', TempFolder)
+    shutil.rmtree(TempFolder,ignore_errors = True)
     
-    with open(StoragePath + '#eDocuPy (' + ModuleName + ').txt',mode='w', encoding="utf-8") as TXTFN:
+    with open(StoragePath + StorageSubFolders + '#Original (' + ModuleName + ').txt',mode='w', encoding="utf-8") as OrgDoc:
+        try:
+            OrgDoc.write(pydoc.render_doc(ModuleForDocumentation, "%s",renderer=pydoc.plaintext))
+        except BaseException:
+            OrgDoc.write('No Original Module Documentation !!!')
+
+    with open(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + ').txt',mode='w', encoding="utf-8") as TXTFN:
         TXTFN.write(OutputFile)
 
     tree = ET.ElementTree(ModuleTag)
-    tree.write(StoragePath + '#eDocuPy (' + ModuleName + ').xml')
+    tree.write(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + ').xml')
 
     JS = json.dumps (O,indent= 5)
-    with open(StoragePath + '#eDocuPy (' + ModuleName + ').json',mode='w') as JSNFN:
+    with open(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + ').json',mode='w') as JSNFN:
         json.dump(O,JSNFN)
 
     print(' '*5 + 'Documentation of (',ModuleName,') is Completed.\n')
+    LogFile += '>>> Documentation of ( ' + ModuleName + ' ) Module is Completed.\n'
     SubModuleCounter += 1
+    SubModules[ModuleForDocumentation] = 1
 
-    if SubModuleDocumentation:
-        for k,v in SubModules.items():
-            if (v == 0):
-                eDocuPy(k)
-            else:
-                continue
+    with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+        LOGFILE.write(LogFile)
+    
+    del inp
+        
+    return 'DocumentationSucceeded'
 
-    os.system(f'start {os.path.realpath(os.getcwd())}')
+def SubModulesExtrFunc(SubModulesInp):
+    global StoragePath,StorageSubFolders,SubModules,LogFile,LogFilePath,OutputFolder
+    #sys.setrecursionlimit(1000+len(SubModules))
 
-    return None
+    for k,v in SubModulesInp.items():
+        if (v == 0):
+            with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+                LOGFILE.write(LogFile)
+            eDocuPy(k,False)
+        else:
+            continue
 
-def FL(INP,STR):
-    return list(filter(lambda _ : not(_.startswith(STR)) , INP))
+def FL(INPUT):
+    if isinstance(INPUT, list):
+        return [_ for _ in INPUT if _.count('__') < 2]
+    elif isinstance(INPUT, dict):
+        return {k:v for k,v in INPUT.items() if k.count('__') < 2}
 
 def FormatDoc(Type,Object,Method,Doc):
     FDString = (Type + '\n' + '-' * len(Type)) * bool(Type) + ('\n\t' + Object + '\n\t' + '-' * len(Object)) * bool(Object) + ('\n\t' + Method + '\n\t' + '-' * len(Method) + '\n\t\t') * bool(Method)
@@ -178,48 +273,76 @@ def FormatDoc(Type,Object,Method,Doc):
     return FDString + '\n'
 
 
+
 ModuleNameNotOK = True
+
 while ModuleNameNotOK:
     ModuleForDocumentation = ''
     SubModulesExtraction = False
 
     os.system("cls")
 
-    ModuleForDocumentation = input("\nEnter an installed (Module Name) to start documentaion process\n\n" + " " * 3 + "Or\n\n" + "Enter (B) to document Builtin module\n\n" + " " * 3 + "Or\n\n" + "Enter (X) to stop:\n\n")
-
-    if ModuleForDocumentation.lower() == 'x':
-        ModuleForDocumentation = ''
-        SubModulesExtraction = ''
-        ModuleNameNotOK = False
-        os.system("cls")
-        print('\nSee U Soon. Thank you ...')
-        quit()
-    elif ModuleForDocumentation.lower() == 'b':
-        ModuleNameNotOK = False
-        ModuleForDocumentation = ''
-    else:
-        ModuleNameNotOK = False
+    ModuleForDocumentation = input("\nEnter an {Existing Module Name} to start documentaion process\n\n" + " " * 3 + \
+                                    "Or\n\n" + \
+                                    "Enter (B) / (Builtins) to document Builtins module\n\n" + " " * 3 + \
+                                    "Or\n\n" + \
+                                    "Enter (X) / (eXit) to terminate:\n\n").strip()
 
     SubModuleExtractionNotOK = True
+    PackageHandler = ''
+    LogFile = ''
+    
+    if ModuleForDocumentation.lower() in ['x','exit']:
+        ModuleNameNotOK = False
+        os.system("cls")
+        print('\nSee U Soon. Thank you ...\n\n')
+        quit()
+    elif ModuleForDocumentation.lower() in ['b','builtins']:
+        ModuleNameNotOK = True
+        ModuleForDocumentation = ''
+        SubModulesExtractionStr = 'False'
+    elif ModuleForDocumentation.split('.')[0] in PKGs:
+        if not(PKGs.get(ModuleForDocumentation.split('.')[0],True)):
+            ModuleNameNotOK = True
+            SubModulesExtractionStr = 'False'
+        else:
+            ModuleNameNotOK = True
+    else:
+        ModuleNameNotOK = True
+        SubModuleExtractionNotOK = False
+    
     while SubModuleExtractionNotOK:
 
         os.system("cls")
-        
-        SubModulesExtraction = input("\nEnter (True / False) for any subModules to be documented if applicable\n\n" + " " * 3 + "Or\n\n" + "Enter (P) to back to the previous menu\n\n" + " " * 3 + "Or\n\n" + "Enter (X) to stop:\n\n")
+        SubModulesExtractionStr = 'False'
 
-        if SubModulesExtraction.lower() in ['true','false']:
+        if PKGs.get(ModuleForDocumentation.split('.')[0],(None,))[0]:
+            SubModulesExtractionStr = input("\nEnter (T)rue / (F)alse for any subModules to be documented if applicable\n\n" + " " * 3 + \
+                                        "Or\n\n" + \
+                                        "Enter (P) / (Previous) to back to the main menu\n\n" + " " * 3 + \
+                                        "Or\n\n" + \
+                                        "Enter (X) / (eXit) to stop:\n\n").strip()
+
+        if SubModulesExtractionStr.lower() in ['true','false','t','f']:
             SubModuleExtractionNotOK = False
-            SubModulesExtraction = (SubModulesExtraction.capitalize() == 'True')
+            SubModulesExtraction = (SubModulesExtractionStr.capitalize() in ['True','T'])
             os.system("cls")
             print('\nProcess started. Please wait ...\n')
             eDocuPy(ModuleForDocumentation,SubModulesExtraction)
-        elif SubModulesExtraction.lower() == 'x':
+            SubModulesExtrFunc(SubModules)
+
+            if sum(SubModules.values()) == len(SubModules) : 
+                OutputFolder = '\\'.join((StoragePath + StorageSubFolders).split('\\')[:1+len(os.getcwd().split('\\'))]) + '\\'
+                os.system(f'start {OutputFolder}')
+
+            SubModules = {}
+            SubModuleCounter = 0
+            ModuleVersion = ''
+        elif SubModulesExtractionStr.lower() in ['x','exit']:
             SubModuleExtractionNotOK = False
-            ModuleForDocumentation = ''
-            SubModulesExtraction = ''
             os.system("cls")
-            print('\nSee U Soon. Thank you ...')
+            print('\nSee U Soon. Thank you ...\n\n')
             quit()   
-        elif SubModulesExtraction.lower() == 'p':
-            SubModuleExtractionNotOK = False
+        elif SubModulesExtractionStr.lower() in ['p','previous']:
             ModuleNameNotOK = True
+            SubModuleExtractionNotOK = False
