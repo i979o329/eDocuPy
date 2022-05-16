@@ -12,8 +12,42 @@ warnings.filterwarnings("ignore")
 
 SubModules = {}
 SubModuleCounter = 0
+<<<<<<< HEAD
 ModuleVersion = ''
 Continue = True
+||||||| ee519fd (Some Bugs Fixed)
+#ModuleVersion = ''
+LogFile = ''
+PackageHandler = ''
+PKGs = dict([(MName,(IsPack,MPath)) for (MPath,MName,IsPack) in pkgutil.iter_modules(None,'')])
+StoragePath = ''
+StorageSubFolders = ''
+OutputFolder = ''
+LogFilePath = ''
+=======
+<<<<<<< HEAD
+#ModuleVersion = ''
+LogFile = ''
+PackageHandler = ''
+PKGs = dict([(MName,(IsPack,MPath)) for (MPath,MName,IsPack) in pkgutil.iter_modules(None,'')])
+StoragePath = ''
+StorageSubFolders = ''
+OutputFolder = ''
+LogFilePath = ''
+||||||| d90b2e4
+ModuleVersion = ''
+Continue = True
+=======
+#ModuleVersion = ''
+LogFile = ''
+PackageHandler = ''
+PKGs = dict([(MName,IsPack) for (MPath,MName,IsPack) in pkgutil.iter_modules(None,'')])
+StoragePath = ''
+StorageSubFolders = ''
+OutputFolder = ''
+LogFilePath = ''
+>>>>>>> a078e210a69c83d1b585111c2421cfc337b2fda7
+>>>>>>> parent of ee519fd (Some Bugs Fixed)
 
 def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = True):
 
@@ -39,10 +73,37 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
             print("\n\t",Err,"\n\n"," " * 15, "And / Or\n\n\t","Module has not been installed !!!")
             return None
 
+<<<<<<< HEAD
     if hasattr(inp,'__version__'):
         ModuleVersion = '-' + str(getattr(inp,'__version__')).split(" ")[0]
     elif hasattr(inp,'version'):
         ModuleVersion = '-' + str(getattr(inp,'version')).split(" ")[0]
+||||||| ee519fd (Some Bugs Fixed)
+            ModuleName = getattr(inp,'__name__') #ModuleForDocumentation
+            if hasattr(inp,'__file__'):
+                ModuleFilePath.append(os.path.dirname(inp.__file__))
+            else:
+                ModuleFilePath.append(PKGs[ModuleForDocumentation.split('.')[0]][1].path + '\\' + '\\'.join(ModuleForDocumentation.split('.')))#ModuleFilePath.append(os.path.dirname(inp.__file__))
+            print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
+=======
+<<<<<<< HEAD
+            ModuleName = getattr(inp,'__name__') #ModuleForDocumentation
+            if hasattr(inp,'__file__'):
+                ModuleFilePath.append(os.path.dirname(inp.__file__))
+            else:
+                ModuleFilePath.append(PKGs[ModuleForDocumentation.split('.')[0]][1].path + '\\' + '\\'.join(ModuleForDocumentation.split('.')))#ModuleFilePath.append(os.path.dirname(inp.__file__))
+            print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
+||||||| d90b2e4
+    if hasattr(inp,'__version__'):
+        ModuleVersion = '-' + str(getattr(inp,'__version__')).split(" ")[0]
+    elif hasattr(inp,'version'):
+        ModuleVersion = '-' + str(getattr(inp,'version')).split(" ")[0]
+=======
+            ModuleFilePath.append(os.path.dirname(inp.__file__))
+            ModuleName = getattr(inp,'__name__') #ModuleForDocumentation
+            print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
+>>>>>>> a078e210a69c83d1b585111c2421cfc337b2fda7
+>>>>>>> parent of ee519fd (Some Bugs Fixed)
 
     print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
     SubFolders = ModuleForDocumentation.split('.')
@@ -51,8 +112,108 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
     
     os.makedirs(StoragePath,exist_ok=True);os.makedirs(StoragePath + '\\#eDocuPy (' + ModuleName + ')\\',exist_ok=True)
 
+<<<<<<< HEAD
     _Doc = []
     _Dir = FL(dir(inp),"_")
+||||||| ee519fd (Some Bugs Fixed)
+            print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of ( ',ModuleForDocumentation,' ) is in progress ...\n')
+            print("\n\t",Err,'!!!') #,"\n\n"," " * 15, "And / Or\n\n\t", "Module has not been installed yet !!!\n\n")
+            
+            LogFile += "*** Error Ocurred During the Documentation of ( " + ModuleForDocumentation + " ) : " + str(Err) + '!!!\n'
+
+            with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+                LOGFILE.write(LogFile)
+
+            SubModuleCounter += 1
+            SubModules[ModuleForDocumentation] = 1
+
+            return 'ErrorOccured'
+
+    if ModuleName == '' : return 'ErrorOccured'
+
+    if SubModules == {} :
+        with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+            LOGFILE.write(LogFile)        
+
+        if PKGs.get(inp.__name__,False)[0] and SubModuleDocumentation:
+            SortedSubModules = sorted([ModuleForDocumentation] + [MName for (MPath,MName,IsPack) in pkgutil.walk_packages(ModuleFilePath,inp.__name__+'.',lambda i : None) if not(MName.endswith('__main__'))],key=lambda i:(i.count('.'),i) )
+            SubModules = {i:0 for i in SortedSubModules}
+
+    SubFolders = ModuleForDocumentation.split('.')[1:]
+    StorageSubFolders = '\\' * bool(SubFolders) + '\\'.join(SubFolders) + '\\'
+    TempFolder = tempfile.mkdtemp() + '\\'
+    os.makedirs(TempFolder ,exist_ok=True)
+    os.makedirs(StoragePath + StorageSubFolders,exist_ok=True)
+
+    _Dir = [i for i in dir(inp) if str(type(getattr(inp,i))) != "<class 'module'>"] #FL(dir(inp))
+=======
+<<<<<<< HEAD
+            print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of ( ',ModuleForDocumentation,' ) is in progress ...\n')
+            print("\n\t",Err,'!!!') #,"\n\n"," " * 15, "And / Or\n\n\t", "Module has not been installed yet !!!\n\n")
+            
+            LogFile += "*** Error Ocurred During the Documentation of ( " + ModuleForDocumentation + " ) : " + str(Err) + '!!!\n'
+
+            with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+                LOGFILE.write(LogFile)
+
+            SubModuleCounter += 1
+            SubModules[ModuleForDocumentation] = 1
+
+            return 'ErrorOccured'
+
+    if ModuleName == '' : return 'ErrorOccured'
+
+    if SubModules == {} :
+        with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+            LOGFILE.write(LogFile)        
+
+        if PKGs.get(inp.__name__,False)[0] and SubModuleDocumentation:
+            SortedSubModules = sorted([ModuleForDocumentation] + [MName for (MPath,MName,IsPack) in pkgutil.walk_packages(ModuleFilePath,inp.__name__+'.',lambda i : None) if not(MName.endswith('__main__'))],key=lambda i:(i.count('.'),i) )
+            SubModules = {i:0 for i in SortedSubModules}
+
+    SubFolders = ModuleForDocumentation.split('.')[1:]
+    StorageSubFolders = '\\' * bool(SubFolders) + '\\'.join(SubFolders) + '\\'
+    TempFolder = tempfile.mkdtemp() + '\\'
+    os.makedirs(TempFolder ,exist_ok=True)
+    os.makedirs(StoragePath + StorageSubFolders,exist_ok=True)
+
+    _Dir = [i for i in dir(inp) if str(type(getattr(inp,i))) != "<class 'module'>"] #FL(dir(inp))
+||||||| d90b2e4
+    _Doc = []
+    _Dir = FL(dir(inp),"_")
+=======
+            print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of ( ',ModuleForDocumentation,' ) is in progress ...\n')
+            print("\n\t",Err,'!!!') #,"\n\n"," " * 15, "And / Or\n\n\t", "Module has not been installed yet !!!\n\n")
+            
+            LogFile += "*** Error Ocurred During the Documentation of ( " + ModuleForDocumentation + " ) : " + str(Err) + '!!!\n'
+
+            with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+                LOGFILE.write(LogFile)
+
+            SubModuleCounter += 1
+            SubModules[ModuleForDocumentation] = 1
+
+            return 'ErrorOccured'
+
+    if ModuleName == '' : return 'ErrorOccured'
+
+    if SubModules == {} :
+        with open(LogFilePath,mode='w', encoding="utf-8") as LOGFILE:
+            LOGFILE.write(LogFile)        
+
+        if PKGs.get(inp.__name__,False) and SubModuleDocumentation:
+            SortedSubModules = sorted([ModuleForDocumentation] + [MName for (MPath,MName,IsPack) in pkgutil.walk_packages(ModuleFilePath,inp.__name__+'.',lambda i : None) if not(MName.endswith('__main__'))],key=lambda i:(i.count('.'),i) )
+            SubModules = {i:0 for i in SortedSubModules}
+
+    SubFolders = ModuleForDocumentation.split('.')[1:]
+    StorageSubFolders = '\\' * bool(SubFolders) + '\\'.join(SubFolders) + '\\'
+    TempFolder = tempfile.mkdtemp() + '\\'
+    os.makedirs(TempFolder ,exist_ok=True)
+    os.makedirs(StoragePath + StorageSubFolders,exist_ok=True)
+
+    _Dir = dir(inp) #FL(dir(inp))
+>>>>>>> a078e210a69c83d1b585111c2421cfc337b2fda7
+>>>>>>> parent of ee519fd (Some Bugs Fixed)
     _Type = list(map(lambda _ : str(type(getattr(inp,_))) , _Dir))
     _SubDir = list(map(lambda _ : FL(dir(getattr(inp,_)),"_") , _Dir))
 
@@ -71,6 +232,77 @@ def eDocuPy(ModuleForDocumentation = '__builtins__' , SubModuleDocumentation = T
     SortKey += ["<class 'module'>"]
     SortKey = dict((value,len(SortKey)-key) for (key,value) in dict(enumerate(SortKey)).items() )
 
+<<<<<<< HEAD
+||||||| ee519fd (Some Bugs Fixed)
+    DataObjects = (set(ModuleExclusiveTypes).union(DefaultClasses))
+    _SubDir = []
+    _Doc = []    
+    
+    for _ in _Dir:
+        try:
+            ObjAttr = getattr(inp,_)
+            #if inspect.ismodule(ObjAttr):
+            #    _SubDir.append(repr(ObjAttr))
+            #    _Doc.append('Module Dependencies')
+            #elif str(type(ObjAttr)) in DataObjects:
+            if str(type(ObjAttr)) in DataObjects:
+                _SubDir.append(repr(ObjAttr))
+                _Doc.append('DATA')
+            else:
+                _SubDir.append(FL(dir(ObjAttr)))
+                _Doc.append(pydoc.render_doc(ObjAttr, "%s",renderer=pydoc.plaintext))
+        
+        except BaseException:
+            _Doc.append('No Documentation !!!')
+            continue
+
+=======
+<<<<<<< HEAD
+    DataObjects = (set(ModuleExclusiveTypes).union(DefaultClasses))
+    _SubDir = []
+    _Doc = []    
+    
+    for _ in _Dir:
+        try:
+            ObjAttr = getattr(inp,_)
+            #if inspect.ismodule(ObjAttr):
+            #    _SubDir.append(repr(ObjAttr))
+            #    _Doc.append('Module Dependencies')
+            #elif str(type(ObjAttr)) in DataObjects:
+            if str(type(ObjAttr)) in DataObjects:
+                _SubDir.append(repr(ObjAttr))
+                _Doc.append('DATA')
+            else:
+                _SubDir.append(FL(dir(ObjAttr)))
+                _Doc.append(pydoc.render_doc(ObjAttr, "%s",renderer=pydoc.plaintext))
+        
+        except BaseException:
+            _Doc.append('No Documentation !!!')
+            continue
+
+||||||| d90b2e4
+=======
+    DataObjects = (set(ModuleExclusiveTypes).union(DefaultClasses))
+    _SubDir = []
+    _Doc = []    
+    
+    for _ in _Dir:
+        try:
+            ObjAttr = getattr(inp,_)
+            if inspect.ismodule(ObjAttr) | \
+                (str(type(ObjAttr)) in DataObjects) :
+                _SubDir.append(repr(ObjAttr))
+                _Doc.append('')
+            else:
+                _SubDir.append(FL(dir(ObjAttr)))
+                _Doc.append(pydoc.render_doc(ObjAttr, "%s",renderer=pydoc.plaintext))
+        
+        except BaseException:
+            _Doc.append('No Documentation !!!')
+            continue
+
+>>>>>>> a078e210a69c83d1b585111c2421cfc337b2fda7
+>>>>>>> parent of ee519fd (Some Bugs Fixed)
     O = {}
     OutputFile = '' ; SepratedOutputFile = ''
     ModuleTag = ET.Element('Module')
@@ -204,10 +436,55 @@ while ModuleNameNotOK:
     while SubModuleExtractionNotOK:
 
         os.system("cls")
+<<<<<<< HEAD
         
         SubModulesExtraction = input("\nEnter (True / False) for any subModules to be documented if applicable\n\n" + " " * 3 + "Or\n\n" + "Enter (P) to back to the previous menu\n\n" + " " * 3 + "Or\n\n" + "Enter (X) to stop:\n\n")
+||||||| ee519fd (Some Bugs Fixed)
+        SubModulesExtractionStr = 'False'
+=======
+<<<<<<< HEAD
+        SubModulesExtractionStr = 'False'
+||||||| d90b2e4
+        
+        SubModulesExtraction = input("\nEnter (True / False) for any subModules to be documented if applicable\n\n" + " " * 3 + "Or\n\n" + "Enter (P) to back to the previous menu\n\n" + " " * 3 + "Or\n\n" + "Enter (X) to stop:\n\n")
+=======
+        
+        if PKGs.get(ModuleForDocumentation.split('.')[0],None):
+            SubModulesExtractionStr = input("\nEnter (T)rue / (F)alse for any subModules to be documented if applicable\n\n" + " " * 3 + \
+                                        "Or\n\n" + \
+                                        "Enter (P) / (Previous) to back to the main menu\n\n" + " " * 3 + \
+                                        "Or\n\n" + \
+                                        "Enter (X) / (eXit) to stop:\n\n").strip()
+>>>>>>> a078e210a69c83d1b585111c2421cfc337b2fda7
+>>>>>>> parent of ee519fd (Some Bugs Fixed)
 
+<<<<<<< HEAD
         if SubModulesExtraction.lower() in ['true','false']:
+||||||| ee519fd (Some Bugs Fixed)
+        if PKGs.get(ModuleForDocumentation.split('.')[0],(None,))[0]:
+            SubModulesExtractionStr = input("\nEnter (T)rue / (F)alse for any subModules to be documented if applicable\n\n" + " " * 3 + \
+                                        "Or\n\n" + \
+                                        "Enter (P) / (Previous) to back to the main menu\n\n" + " " * 3 + \
+                                        "Or\n\n" + \
+                                        "Enter (X) / (eXit) to stop:\n\n").strip()
+
+        if SubModulesExtractionStr.lower() in ['true','false','t','f']:
+=======
+<<<<<<< HEAD
+        if PKGs.get(ModuleForDocumentation.split('.')[0],(None,))[0]:
+            SubModulesExtractionStr = input("\nEnter (T)rue / (F)alse for any subModules to be documented if applicable\n\n" + " " * 3 + \
+                                        "Or\n\n" + \
+                                        "Enter (P) / (Previous) to back to the main menu\n\n" + " " * 3 + \
+                                        "Or\n\n" + \
+                                        "Enter (X) / (eXit) to stop:\n\n").strip()
+
+        if SubModulesExtractionStr.lower() in ['true','false','t','f']:
+||||||| d90b2e4
+        if SubModulesExtraction.lower() in ['true','false']:
+=======
+        if SubModulesExtractionStr.lower() in ['true','false','t','f']:
+>>>>>>> a078e210a69c83d1b585111c2421cfc337b2fda7
+>>>>>>> parent of ee519fd (Some Bugs Fixed)
             SubModuleExtractionNotOK = False
             SubModulesExtraction = (SubModulesExtraction.capitalize() == 'True')
             os.system("cls")
