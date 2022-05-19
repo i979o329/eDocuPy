@@ -20,6 +20,9 @@ Finally, *.JSON, *.XML, *.TXT, *.SQLITE and *.zip formats are the ones that eDoc
 		in Win OS  =>	Python eDocuPy.py
 		in Mac OS  =>	Python3 eDocuPy.py
 
+# Some Sample Screen Captures:
+[![e-Docu-Py-importlib-I.png](https://i.postimg.cc/DwWF1frz/e-Docu-Py-importlib-I.png)](https://postimg.cc/K1yd22sX)
+
 ## Here is an example of eDocuPy's output style run over the 'importlib' builtin module in *.TXT format:
 
 	TYPE: <class 'function'>
