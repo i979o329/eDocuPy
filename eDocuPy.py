@@ -9,7 +9,7 @@ import inspect
 import pkgutil
 import tempfile
 import datetime
-#import sys
+import sys
 
 #sys.setrecursionlimit(10000)
 warnings.filterwarnings("ignore")
@@ -39,6 +39,9 @@ def eDocuPy(ModuleForDocumentation = 'builtins' , SubModuleDocumentation = True)
         if SubModules == {} :        
             if ModuleForDocumentation in ['','builtins','__builtins__']:
                 inp = __import__('builtins')
+                os.makedirs(StoragePath,exist_ok=True)
+            elif ModuleForDocumentation in sys.builtin_module_names:
+                inp = __import__(ModuleForDocumentation)
                 os.makedirs(StoragePath,exist_ok=True)
             elif ModuleForDocumentation.split('.')[0] in PKGs:
                 PackageHandler = __import__(ModuleForDocumentation, fromlist=[''])    
@@ -79,6 +82,12 @@ def eDocuPy(ModuleForDocumentation = 'builtins' , SubModuleDocumentation = True)
         ModuleVersion = '' # ModuleName + '-' + sys.version.split(' ')[0]
         print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
 
+    elif ModuleForDocumentation in sys.builtin_module_names:
+
+        ModuleName = getattr(inp,'__name__')
+        ModuleVersion = '' # ModuleName + '-' + sys.version.split(' ')[0]
+        print('\n',('(' + str(SubModuleCounter) + '/' + str(len(SubModules)-1) + ') ') * bool(SubModules) + 'Documentation of (',ModuleName,') is in progress ...\n')
+    
     elif ModuleForDocumentation.split('.')[0] in PKGs: #.get(ModuleForDocumentation),None):
         try:
 
@@ -291,7 +300,7 @@ while ModuleNameNotOK:
     ModuleForDocumentation = ''
     SubModulesExtraction = False
 
-    os.system("cls")
+    os.system('cls' if os.name in ('nt', 'dos') else 'clear')
 
     ModuleForDocumentation = input("\nEnter an {Existing Python Package/Module Name} to start documentaion process\n\n" + " " * 3 + \
                                     "Or\n\n" + \
@@ -305,12 +314,15 @@ while ModuleNameNotOK:
     
     if ModuleForDocumentation.lower() in ['x','exit']:
         ModuleNameNotOK = False
-        os.system("cls")
+        os.system('cls' if os.name in ('nt', 'dos') else 'clear')
         print('\nSee U Soon. Thank you ...\n\n')
         quit()
     elif ModuleForDocumentation.lower() in ['b','builtins']:
         ModuleNameNotOK = True
         ModuleForDocumentation = ''
+        SubModulesExtractionStr = 'False'
+    elif ModuleForDocumentation in sys.builtin_module_names:
+        ModuleNameNotOK = True
         SubModulesExtractionStr = 'False'
     elif ModuleForDocumentation.split('.')[0] in PKGs:
         if not(PKGs.get(ModuleForDocumentation.split('.')[0],True)):
@@ -324,7 +336,7 @@ while ModuleNameNotOK:
     
     while SubModuleExtractionNotOK:
 
-        os.system("cls")
+        os.system('cls' if os.name in ('nt', 'dos') else 'clear')
         SubModulesExtractionStr = 'False'
 
         if PKGs.get(ModuleForDocumentation.split('.')[0],(None,))[0]:
@@ -337,7 +349,7 @@ while ModuleNameNotOK:
         if SubModulesExtractionStr.lower() in ['true','false','t','f']:
             SubModuleExtractionNotOK = False
             SubModulesExtraction = (SubModulesExtractionStr.capitalize() in ['True','T'])
-            os.system("cls")
+            os.system('cls' if os.name in ('nt', 'dos') else 'clear')
             print('\nProcess started. Please wait ...\n')
             eDocuPy(ModuleForDocumentation,SubModulesExtraction)
             SubModulesExtrFunc(SubModules)
@@ -351,7 +363,7 @@ while ModuleNameNotOK:
             ModuleVersion = ''
         elif SubModulesExtractionStr.lower() in ['x','exit']:
             SubModuleExtractionNotOK = False
-            os.system("cls")
+            os.system('cls' if os.name in ('nt', 'dos') else 'clear')
             print('\nSee U Soon. Thank you ...\n\n')
             quit()   
         elif SubModulesExtractionStr.lower() in ['p','previous']:
