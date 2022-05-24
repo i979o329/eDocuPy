@@ -20,6 +20,18 @@ Finally, *.JSON, *.XML, *.TXT, *.SQLITE and *.zip formats are the ones that eDoc
 		in Win OS  =>	Python eDocuPy.py
 		in Mac OS  =>	Python3 eDocuPy.py
 
+# Some Sample Screen Captures:
+<a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/VL5ZqQkf/e-Docu-Py-importlib-I.png" alt="e-Docu-Py-importlib-I"/></a><br/><br/>
+<a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/KYh9h1rj/e-Docu-Py-importlib-II.png" alt="e-Docu-Py-importlib-II"/></a><br/><br/>
+<a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/vZVPKrnC/e-Docu-Py-numpy-I.png" alt="e-Docu-Py-numpy-I"/></a><br/><br/>
+<a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/4NMLwLYz/e-Docu-Py-numpy-II.png" alt="e-Docu-Py-numpy-II"/></a><br/><br/>
+<a href="https://postimg.cc/zHnK3JhM" target="_blank"><img src="https://i.postimg.cc/d3fBH3Vq/e-Docu-Py-numpy-III.png" alt="e-Docu-Py-numpy-III"/></a><br/><br/>
+<a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/hjpMmpFQ/e-Docu-Py-numpy-IV.png" alt="e-Docu-Py-numpy-IV"/></a><br/><br/>
+<a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/DZ2BmRNK/e-Docu-Py-numpy-V.png" alt="e-Docu-Py-numpy-V"/></a><br/><br/>
+<a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/YSNdrtb3/e-Docu-Py-numpy-VI.png" alt="e-Docu-Py-numpy-VI"/></a><br/><br/>
+<a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/4yyPQVZL/e-Docu-Py-numpy-VII.png" alt="e-Docu-Py-numpy-VII"/></a><br/><br/>
+
+
 ## Here is an example of eDocuPy's output style run over the 'importlib' builtin module in *.TXT format:
 
 	TYPE: <class 'function'>
