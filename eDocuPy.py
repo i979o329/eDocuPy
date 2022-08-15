@@ -163,7 +163,7 @@ def eDocuPy(ModuleForDocumentation = 'builtins' , SubModuleDocumentation = True)
             continue
 
     O = {}
-    OutputFile = '' ; SepratedOutputFile = ''
+    OutputFile = '' ; BrOutputFile = '' ; NewType = '' ; SepratedOutputFile = ''
     ModuleTag = ET.Element('Module')
     ModuleTag.set('Name', ModuleName)
 
@@ -174,16 +174,21 @@ def eDocuPy(ModuleForDocumentation = 'builtins' , SubModuleDocumentation = True)
     cur.execute('CREATE TABLE IF NOT EXISTS ' + 'eDocuPy' + ' (Type TEXT,Object TEXT,"Method, Attribute / Data" TEXT,Documetation TEXT)')
     ShouldWriteDependencies = True
     for i in sorted(zip(_Dir,_Type,_Doc,_SubDir),key=(lambda _ : (SortKey.get(_[1]),len(_[3]))),reverse=True):
-
+        
         if i[1] == "<class 'module'>":
             if ShouldWriteDependencies : LogFile += '│' + ' '*3 + 'Dependencies : \n'
             LogFile += '│' + ' '*5 + '├──{' + i[0] + ' : ' + str(i[3]) + '}\n'
             ShouldWriteDependencies = False
             continue
 
+        if NewType != i[1] : 
+            NewType = i[1]
+            BrOutputFile+= (bool(len(BrOutputFile)) * '\n') + NewType  + ':\n'
 
         TypeTag = ET.SubElement(ModuleTag, 'Class')
         TypeTag.set('Type',i[1])
+
+        BrOutputFile+= (' '* len(i[1])) + i[0]  + (lambda TYPE:' : ' + str(i[3]) if TYPE =='DATA' else '')(i[2]) +'\n'
 
         if i[3] == []:
 
@@ -194,7 +199,7 @@ def eDocuPy(ModuleForDocumentation = 'builtins' , SubModuleDocumentation = True)
 
             SepratedOutputFile =  FormatDoc('TYPE: ' + i[1],'','','') + FormatDoc('','Object: ' +  (ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0],'','') + FormatDoc('','','Documentation on ' + (ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0] + ':',i[2])
             OutputFile +=  SepratedOutputFile
-
+            
             ObjectTag = ET.SubElement(TypeTag, 'Object')
             ObjectTag.set('Name',(ModuleName + '.') * bool(ModuleName + '.' != 'builtins.') + i[0])
 
@@ -234,7 +239,7 @@ def eDocuPy(ModuleForDocumentation = 'builtins' , SubModuleDocumentation = True)
     db.close()
 
     OutputFile += '\n' + ('*' * 70) + '\n'
-
+    
     XMLSTR = ET.tostring(ModuleTag)
 
     shutil.make_archive(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + ')\\', 'zip', TempFolder)
@@ -248,6 +253,9 @@ def eDocuPy(ModuleForDocumentation = 'builtins' , SubModuleDocumentation = True)
 
     with open(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + ').txt',mode='w', encoding="utf-8") as TXTFN:
         TXTFN.write(OutputFile)
+    
+    with open(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + '_Summary).txt',mode='w', encoding="utf-8") as bTXTFN:
+        bTXTFN.write(BrOutputFile)
 
     tree = ET.ElementTree(ModuleTag)
     tree.write(StoragePath + StorageSubFolders + '#eDocuPy (' + ModuleName + ').xml')
